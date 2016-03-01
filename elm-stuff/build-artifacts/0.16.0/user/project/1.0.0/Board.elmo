@@ -4,25 +4,72 @@ Elm.Board.make = function (_elm) {
    _elm.Board = _elm.Board || {};
    if (_elm.Board.values) return _elm.Board.values;
    var _U = Elm.Native.Utils.make(_elm),
+   $Array = Elm.Array.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Square = Elm.Square.make(_elm);
    var _op = {};
-   var boardRow = function (row) {
-      return A2($Html.tr,
-      _U.list([]),
-      A2($List.map,function (square) {    return A2($Html.td,_U.list([]),_U.list([$Html.text($Basics.toString(square.coordinate.x))]));},row));
-   };
-   var view = F2(function (address,board) {
-      return A2($Html.div,_U.list([]),_U.list([A2($Html.table,_U.list([]),_U.list([A2($Html.tbody,_U.list([]),A2($List.map,boardRow,board.squares))]))]));
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      var _p2 = _p0._0;
+      var _p1 = _p0._1;
+      var updateSquare = function (square) {
+         return _U.eq(_p2.row,square.row) && _U.eq(_p2.col,square.col) ? A2($Square.update,_p1,square) : A2($Square.isNeighbor,
+         square,
+         _p2) && $Basics.not(square.isMined) ? A2($Square.update,_p1,square) : square;
+      };
+      return A2($List.map,updateSquare,model);
    });
-   var update = F2(function (action,model) {    return model;});
-   var Click = function (a) {    return {ctor: "Click",_0: a};};
-   var Board = function (a) {    return {squares: a};};
-   return _elm.Board.values = {_op: _op,Board: Board,Click: Click,update: update,view: view,boardRow: boardRow};
+   var Reveal = F2(function (a,b) {    return {ctor: "Reveal",_0: a,_1: b};});
+   var toMultiDimensional$ = F2(function (square,acc) {
+      var row = A2($Maybe.withDefault,$Array.empty,A2($Array.get,square.row,acc));
+      var col = A3($Array.set,square.col,square,row);
+      var updated = A3($Array.set,square.row,col,acc);
+      return updated;
+   });
+   var toMultiDimensional = function (board) {
+      var boardLength = $Basics.round($Basics.sqrt($Basics.toFloat($List.length(board))));
+      var initial = A2($Array.initialize,
+      boardLength,
+      function (n) {
+         return A2($Array.initialize,boardLength,function (m) {    return A4($Square.init,0,0,false,false);});
+      });
+      return A3($Array.foldl,toMultiDimensional$,initial,$Array.fromList(board));
+   };
+   var isVictory = function (board) {
+      return $Basics.not(A2($List.any,function (square) {    return $Basics.not(square.isMined) && $Basics.not(square.isRevealed);},board));
+   };
+   var isLoss = function (board) {    return A2($List.any,$Square.isMineRevealed,board);};
+   var getNeighbors = F2(function (square,board) {    return A2($List.filter,$Square.isNeighbor(square),board);});
+   var viewSquare = F3(function (address,board,model) {
+      var neighbors = A2(getNeighbors,model,board);
+      var mineCount = $List.length(A2($List.filter,function (_) {    return _.isMined;},neighbors));
+      return A3($Square.view,A2($Signal.forwardTo,address,Reveal(model)),model,mineCount);
+   });
+   var viewRow = F3(function (address,board,row) {    return A2($Html.tr,_U.list([]),$Array.toList(A2($Array.map,A2(viewSquare,address,board),row)));});
+   var view = F2(function (address,model) {
+      var multiDimensional = toMultiDimensional(model);
+      return A2($Html.table,
+      _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "width",_1: "100%"}
+                                              ,{ctor: "_Tuple2",_0: "height",_1: "500px"}
+                                              ,{ctor: "_Tuple2",_0: "table-layout",_1: "fixed"}]))]),
+      _U.list([A2($Html.tbody,_U.list([]),$Array.toList(A2($Array.map,A2(viewRow,address,model),multiDimensional)))]));
+   });
+   return _elm.Board.values = {_op: _op
+                              ,getNeighbors: getNeighbors
+                              ,isLoss: isLoss
+                              ,isVictory: isVictory
+                              ,toMultiDimensional: toMultiDimensional
+                              ,toMultiDimensional$: toMultiDimensional$
+                              ,Reveal: Reveal
+                              ,update: update
+                              ,view: view
+                              ,viewRow: viewRow
+                              ,viewSquare: viewSquare};
 };

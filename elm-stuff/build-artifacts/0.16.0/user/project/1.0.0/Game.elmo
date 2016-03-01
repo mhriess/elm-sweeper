@@ -1,0 +1,116 @@
+Elm.Game = Elm.Game || {};
+Elm.Game.make = function (_elm) {
+   "use strict";
+   _elm.Game = _elm.Game || {};
+   if (_elm.Game.values) return _elm.Game.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Board = Elm.Board.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Random = Elm.Random.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Square = Elm.Square.make(_elm);
+   var _op = {};
+   var NoOp = function (a) {    return {ctor: "NoOp",_0: a};};
+   var Reset = {ctor: "Reset"};
+   var Move = function (a) {    return {ctor: "Move",_0: a};};
+   var view = F2(function (address,model) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "margin",_1: "100px auto"},{ctor: "_Tuple2",_0: "width",_1: "500px"}]))]),
+      _U.list([function () {
+         var _p0 = model;
+         if (_p0.ctor === "FinishedGame") {
+               return A2($Html.div,
+               _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "text-align",_1: "center"},{ctor: "_Tuple2",_0: "font-size",_1: "36px"}]))]),
+               _U.list([A2($Board.view,A2($Signal.forwardTo,address,NoOp),_p0._0)
+                       ,$Html.text($Basics.toString(_p0._1))
+                       ,A2($Html.div,
+                       _U.list([]),
+                       _U.list([A2($Html.button,_U.list([A2($Html$Events.onClick,address,Reset)]),_U.list([$Html.text("New Game")]))]))]));
+            } else {
+               return A2($Board.view,A2($Signal.forwardTo,address,Move),_p0._0);
+            }
+      }()]));
+   });
+   var placeMine = F3(function (row,col,square) {    return _U.eq(square.row,row) && _U.eq(square.col,col) ? _U.update(square,{isMined: true}) : square;});
+   var randomPair = F3(function (seed,min,max) {    return A2($Random.generate,A2($Random.pair,A2($Random.$int,min,max),A2($Random.$int,min,max)),seed);});
+   var placeMines = F3(function (board,numMines,seed) {
+      placeMines: while (true) if (_U.eq(numMines,0)) return board; else {
+            var rnd = A3(randomPair,seed,0,$List.length(board));
+            var coords = $Basics.fst(rnd);
+            var row = $Basics.fst(coords);
+            var col = $Basics.snd(coords);
+            var maybeSquare = $List.head(A2($List.filter,function (sq) {    return _U.eq(sq.row,row) && _U.eq(sq.col,col);},board));
+            var newSeed = $Basics.snd(rnd);
+            var _p1 = maybeSquare;
+            if (_p1.ctor === "Just") {
+                  if (_p1._0.isMined) {
+                        var _v2 = board,_v3 = numMines,_v4 = newSeed;
+                        board = _v2;
+                        numMines = _v3;
+                        seed = _v4;
+                        continue placeMines;
+                     } else {
+                        var newBoard = A2($List.map,A2(placeMine,row,col),board);
+                        var _v5 = newBoard,_v6 = numMines - 1,_v7 = newSeed;
+                        board = _v5;
+                        numMines = _v6;
+                        seed = _v7;
+                        continue placeMines;
+                     }
+               } else {
+                  var _v8 = board,_v9 = numMines,_v10 = newSeed;
+                  board = _v8;
+                  numMines = _v9;
+                  seed = _v10;
+                  continue placeMines;
+               }
+         }
+   });
+   var board = function (model) {    var _p2 = model;if (_p2.ctor === "FinishedGame") {    return _p2._0;} else {    return _p2._0;}};
+   var UnfinishedGame = function (a) {    return {ctor: "UnfinishedGame",_0: a};};
+   var initialState = function () {
+      var seed = $Random.initialSeed(33212);
+      var blankBoard = A2($List.concatMap,
+      function (n) {
+         return A2($List.map,function (m) {    return A4($Square.init,n,m,false,false);},_U.range(0,9));
+      },
+      _U.range(0,9));
+      var board = A3(placeMines,blankBoard,10,seed);
+      return UnfinishedGame(board);
+   }();
+   var FinishedGame = F2(function (a,b) {    return {ctor: "FinishedGame",_0: a,_1: b};});
+   var Loss = {ctor: "Loss"};
+   var Victory = {ctor: "Victory"};
+   var update = F2(function (action,model) {
+      var _p3 = action;
+      switch (_p3.ctor)
+      {case "Move": var newBoard = A2($Board.update,_p3._0,board(model));
+           return $Board.isLoss(newBoard) ? A2(FinishedGame,newBoard,Loss) : $Board.isVictory(newBoard) ? A2(FinishedGame,
+           newBoard,
+           Victory) : UnfinishedGame(newBoard);
+         case "Reset": return initialState;
+         default: return model;}
+   });
+   return _elm.Game.values = {_op: _op
+                             ,Victory: Victory
+                             ,Loss: Loss
+                             ,FinishedGame: FinishedGame
+                             ,UnfinishedGame: UnfinishedGame
+                             ,board: board
+                             ,randomPair: randomPair
+                             ,placeMine: placeMine
+                             ,placeMines: placeMines
+                             ,initialState: initialState
+                             ,Move: Move
+                             ,Reset: Reset
+                             ,NoOp: NoOp
+                             ,update: update
+                             ,view: view};
+};

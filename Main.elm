@@ -1,15 +1,13 @@
 import StartApp.Simple exposing (start)
 
 import Html exposing (..)
-import Model exposing (..)
-import Signal exposing (map, Signal, foldp, mergeMany, sampleOn)
-import Update exposing (..)
-import View exposing (..)
+import Game exposing  (..)
 
 
+main : Signal Html.Html
 main =
   start
-    { model = initialState
-    , update = update
-    , view = view
+    { model = Game.initialState
+    , update = Game.update
+    , view = Game.view
     }

@@ -15,6 +15,7 @@ Elm.View.make = function (_elm) {
    $Model = Elm.Model.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
+   $Square = Elm.Square.make(_elm),
    $Update = Elm.Update.make(_elm);
    var _op = {};
    var drawCell = F3(function (address,board,square) {
