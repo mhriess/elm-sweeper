@@ -1,0 +1,17 @@
+Elm.Square = Elm.Square || {};
+Elm.Square.make = function (_elm) {
+   "use strict";
+   _elm.Square = _elm.Square || {};
+   if (_elm.Square.values) return _elm.Square.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var Square = function (a) {    return {coordinate: a};};
+   var Coordinate = F2(function (a,b) {    return {x: a,y: b};});
+   return _elm.Square.values = {_op: _op,Coordinate: Coordinate,Square: Square};
+};

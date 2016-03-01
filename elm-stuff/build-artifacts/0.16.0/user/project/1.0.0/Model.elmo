@@ -1,0 +1,130 @@
+Elm.Model = Elm.Model || {};
+Elm.Model.make = function (_elm) {
+   "use strict";
+   _elm.Model = _elm.Model || {};
+   if (_elm.Model.values) return _elm.Model.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Array = Elm.Array.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Random = Elm.Random.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var isNeighbor = F3(function (r,c,square) {    return _U.cmp($Basics.abs(square.row - r),1) < 1 && _U.cmp($Basics.abs(square.col - c),1) < 1;});
+   var openNeighbors = F3(function (row,col,board) {
+      var shouldReveal = F3(function (square,r,c) {    return A3(isNeighbor,r,c,square) && $Basics.not(square.isMined);});
+      return A2($List.map,function (square) {    return A3(shouldReveal,square,row,col) ? _U.update(square,{isRevealed: true}) : square;},board);
+   });
+   var getNeighbors = F2(function (square,board) {    return A2($List.filter,A2(isNeighbor,square.row,square.col),board);});
+   var toMultiDimensional$ = F2(function (square,acc) {
+      var row = A2($Maybe.withDefault,$Array.empty,A2($Array.get,square.row,acc));
+      var col = A3($Array.set,square.col,square,row);
+      var updated = A3($Array.set,square.row,col,acc);
+      return updated;
+   });
+   var updateSquare = F3(function (row,col,square) {
+      return _U.eq(square.row,row) && _U.eq(square.col,col) ? _U.update(square,{isRevealed: true}) : square;
+   });
+   var isMineRevealed = function (square) {    return square.isMined && square.isRevealed;};
+   var isVictory = function (board) {
+      return $Basics.not(A2($List.any,function (square) {    return $Basics.not(square.isMined) && $Basics.not(square.isRevealed);},board));
+   };
+   var isLoss = function (board) {    return A2($List.any,isMineRevealed,board);};
+   var initializeSquare = F2(function (row,col) {    return {row: row,col: col,isMined: false,isRevealed: false};});
+   var placeMine = F3(function (row,col,square) {    return _U.eq(square.row,row) && _U.eq(square.col,col) ? _U.update(square,{isMined: true}) : square;});
+   var randomPair = F3(function (seed,min,max) {    return A2($Random.generate,A2($Random.pair,A2($Random.$int,min,max),A2($Random.$int,min,max)),seed);});
+   var placeMines = F3(function (board,numMines,seed) {
+      placeMines: while (true) if (_U.eq(numMines,0)) return board; else {
+            var rnd = A3(randomPair,seed,0,$List.length(board));
+            var coords = $Basics.fst(rnd);
+            var row = $Basics.fst(coords);
+            var col = $Basics.snd(coords);
+            var maybeSquare = $List.head(A2($List.filter,function (sq) {    return _U.eq(sq.row,row) && _U.eq(sq.col,col);},board));
+            var newSeed = $Basics.snd(rnd);
+            var _p0 = maybeSquare;
+            if (_p0.ctor === "Just") {
+                  if (_p0._0.isMined) {
+                        var _v1 = board,_v2 = numMines,_v3 = newSeed;
+                        board = _v1;
+                        numMines = _v2;
+                        seed = _v3;
+                        continue placeMines;
+                     } else {
+                        var newBoard = A2($List.map,A2(placeMine,row,col),board);
+                        var _v4 = newBoard,_v5 = numMines - 1,_v6 = newSeed;
+                        board = _v4;
+                        numMines = _v5;
+                        seed = _v6;
+                        continue placeMines;
+                     }
+               } else {
+                  var _v7 = board,_v8 = numMines,_v9 = newSeed;
+                  board = _v7;
+                  numMines = _v8;
+                  seed = _v9;
+                  continue placeMines;
+               }
+         }
+   });
+   var board = function (state) {    var _p1 = state;if (_p1.ctor === "FinishedGame") {    return _p1._0;} else {    return _p1._0;}};
+   var UnfinishedGame = function (a) {    return {ctor: "UnfinishedGame",_0: a};};
+   var initialState = function () {
+      var seed = $Random.initialSeed(33212);
+      var blankBoard = A2($List.concatMap,
+      function (n) {
+         return A2($List.map,function (m) {    return A2(initializeSquare,n,m);},_U.range(0,9));
+      },
+      _U.range(0,9));
+      var board = A3(placeMines,blankBoard,10,seed);
+      return UnfinishedGame(board);
+   }();
+   var FinishedGame = F2(function (a,b) {    return {ctor: "FinishedGame",_0: a,_1: b};});
+   var Square = F4(function (a,b,c,d) {    return {row: a,col: b,isMined: c,isRevealed: d};});
+   var toMultiDimensional = function (board) {
+      var boardLength = $Basics.round($Basics.sqrt($Basics.toFloat($List.length(board))));
+      var initial = A2($Array.initialize,
+      boardLength,
+      function (n) {
+         return A2($Array.initialize,boardLength,function (m) {    return A4(Square,0,0,false,false);});
+      });
+      return A3($Array.foldl,toMultiDimensional$,initial,$Array.fromList(board));
+   };
+   var Loss = {ctor: "Loss"};
+   var Victory = {ctor: "Victory"};
+   var processMove = F3(function (row,col,state) {
+      var _p2 = state;
+      if (_p2.ctor === "FinishedGame") {
+            return state;
+         } else {
+            var newBoard = A2($List.map,A2(updateSquare,row,col),board(state));
+            return isLoss(newBoard) ? A2(FinishedGame,newBoard,Loss) : isVictory(newBoard) ? A2(FinishedGame,
+            newBoard,
+            Victory) : UnfinishedGame(A3(openNeighbors,row,col,newBoard));
+         }
+   });
+   return _elm.Model.values = {_op: _op
+                              ,Victory: Victory
+                              ,Loss: Loss
+                              ,Square: Square
+                              ,FinishedGame: FinishedGame
+                              ,UnfinishedGame: UnfinishedGame
+                              ,board: board
+                              ,randomPair: randomPair
+                              ,placeMine: placeMine
+                              ,placeMines: placeMines
+                              ,initializeSquare: initializeSquare
+                              ,initialState: initialState
+                              ,isLoss: isLoss
+                              ,isVictory: isVictory
+                              ,isMineRevealed: isMineRevealed
+                              ,processMove: processMove
+                              ,updateSquare: updateSquare
+                              ,toMultiDimensional: toMultiDimensional
+                              ,toMultiDimensional$: toMultiDimensional$
+                              ,getNeighbors: getNeighbors
+                              ,isNeighbor: isNeighbor
+                              ,openNeighbors: openNeighbors};
+};

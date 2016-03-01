@@ -1,0 +1,54 @@
+Elm.Repl = Elm.Repl || {};
+Elm.Repl.make = function (_elm) {
+   "use strict";
+   _elm.Repl = _elm.Repl || {};
+   if (_elm.Repl.values) return _elm.Repl.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Array = Elm.Array.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Random = Elm.Random.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var tsol = {ctor: "_Tuple0"};
+   var toMultiDimensional$ = F2(function (square,acc) {
+      var row = A2($Maybe.withDefault,$Array.empty,A2($Array.get,square.row,acc));
+      var col = A3($Array.set,square.col,square,row);
+      return A3($Array.set,square.row,row,acc);
+   });
+   var toMultiDimensional = function (board) {
+      var initial = A2($Array.initialize,1,function (n) {    return $Array.empty;});
+      return A3($Array.foldl,toMultiDimensional$,initial,$Array.fromList(board));
+   };
+   var s = $Random.initialSeed(1234123);
+   var r = $Random.pair(A2($Random.$int,0,10));
+   var l = _U.list([{a: true},{a: false}]);
+   var isVictory = function (board) {
+      return A2($List.all,function (_) {    return _.isRevealed;},A2($List.filter,function (square) {    return $Basics.not(square.isMined);},board));
+   };
+   var initializeSquare = F2(function (row,col) {    return {row: row,col: col,isMined: false,isRevealed: false};});
+   var p = A2($List.map,initializeSquare,_U.range(0,9));
+   var board = 64;
+   var b = _U.list([{isMined: false,isRevealed: false},{isMined: true,isRevealed: false}]);
+   var deltron3030 = b;
+   var a = 2;
+   var Square = F4(function (a,b,c,d) {    return {row: a,col: b,isMined: c,isRevealed: d};});
+   return _elm.Repl.values = {_op: _op
+                             ,Square: Square
+                             ,a: a
+                             ,b: b
+                             ,board: board
+                             ,deltron3030: deltron3030
+                             ,initializeSquare: initializeSquare
+                             ,isVictory: isVictory
+                             ,l: l
+                             ,p: p
+                             ,r: r
+                             ,s: s
+                             ,toMultiDimensional: toMultiDimensional
+                             ,toMultiDimensional$: toMultiDimensional$
+                             ,tsol: tsol};
+};

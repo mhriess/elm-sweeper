@@ -1,0 +1,70 @@
+Elm.View = Elm.View || {};
+Elm.View.make = function (_elm) {
+   "use strict";
+   _elm.View = _elm.View || {};
+   if (_elm.View.values) return _elm.View.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Array = Elm.Array.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Model = Elm.Model.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Update = Elm.Update.make(_elm);
+   var _op = {};
+   var drawCell = F3(function (address,board,square) {
+      if (square.isRevealed) {
+            var neighbors = A2($Model.getNeighbors,square,board);
+            var mineCount = $List.length(A2($List.filter,function (_) {    return _.isMined;},neighbors));
+            return A2($Html.td,
+            _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "border",_1: "1px solid black"}
+                                                    ,{ctor: "_Tuple2",_0: "background-color",_1: square.isMined ? "red" : "gray"}
+                                                    ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
+                                                    ,{ctor: "_Tuple2",_0: "height",_1: "48px"}
+                                                    ,{ctor: "_Tuple2",_0: "width",_1: "48px"}
+                                                    ,{ctor: "_Tuple2",_0: "font-size",_1: "10px"}]))]),
+            _U.list([$Html.text(_U.cmp(mineCount,0) > 0 && $Basics.not(square.isMined) ? $Basics.toString(mineCount) : "")]));
+         } else return A2($Html.td,
+         _U.list([A2($Html$Events.onClick,address,$Update.Click({ctor: "_Tuple2",_0: square.row,_1: square.col}))
+                 ,$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "border",_1: "1px solid black"}
+                                                 ,{ctor: "_Tuple2",_0: "background-color",_1: "blue"}
+                                                 ,{ctor: "_Tuple2",_0: "height",_1: "48px"}
+                                                 ,{ctor: "_Tuple2",_0: "width",_1: "48px"}]))]),
+         _U.list([]));
+   });
+   var drawRow = F3(function (address,board,row) {    return A2($Html.tr,_U.list([]),$Array.toList(A2($Array.map,A2(drawCell,address,board),row)));});
+   var drawBoard = F2(function (address,board) {
+      var multiDimensionalBoard = $Model.toMultiDimensional(board);
+      return A2($Html.div,
+      _U.list([]),
+      _U.list([A2($Html.table,
+      _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "width",_1: "100%"}
+                                              ,{ctor: "_Tuple2",_0: "height",_1: "500px"}
+                                              ,{ctor: "_Tuple2",_0: "table-layout",_1: "fixed"}]))]),
+      _U.list([A2($Html.tbody,_U.list([]),$Array.toList(A2($Array.map,A2(drawRow,address,board),$Model.toMultiDimensional(board))))]))]));
+   });
+   var view = F2(function (address,state) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "margin",_1: "100px auto"},{ctor: "_Tuple2",_0: "width",_1: "500px"}]))]),
+      _U.list([function () {
+         var _p0 = state;
+         if (_p0.ctor === "FinishedGame") {
+               return A2($Html.div,
+               _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "text-align",_1: "center"},{ctor: "_Tuple2",_0: "font-size",_1: "36px"}]))]),
+               _U.list([A2(drawBoard,address,_p0._0)
+                       ,$Html.text($Basics.toString(_p0._1))
+                       ,A2($Html.div,
+                       _U.list([]),
+                       _U.list([A2($Html.button,_U.list([A2($Html$Events.onClick,address,$Update.Reset)]),_U.list([$Html.text("New Game")]))]))]));
+            } else {
+               return A2(drawBoard,address,_p0._0);
+            }
+      }()]));
+   });
+   return _elm.View.values = {_op: _op,drawBoard: drawBoard,drawRow: drawRow,drawCell: drawCell,view: view};
+};

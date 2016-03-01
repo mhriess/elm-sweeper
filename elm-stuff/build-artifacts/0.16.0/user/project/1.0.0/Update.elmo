@@ -1,0 +1,27 @@
+Elm.Update = Elm.Update || {};
+Elm.Update.make = function (_elm) {
+   "use strict";
+   _elm.Update = _elm.Update || {};
+   if (_elm.Update.values) return _elm.Update.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Model = Elm.Model.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      if (_p0.ctor === "Click") {
+            var _p1 = _p0._0;
+            return A3($Model.processMove,$Basics.fst(_p1),$Basics.snd(_p1),model);
+         } else {
+            return $Model.initialState;
+         }
+   });
+   var Reset = {ctor: "Reset"};
+   var Click = function (a) {    return {ctor: "Click",_0: a};};
+   return _elm.Update.values = {_op: _op,Click: Click,Reset: Reset,update: update};
+};

@@ -1,0 +1,28 @@
+Elm.Board = Elm.Board || {};
+Elm.Board.make = function (_elm) {
+   "use strict";
+   _elm.Board = _elm.Board || {};
+   if (_elm.Board.values) return _elm.Board.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Square = Elm.Square.make(_elm);
+   var _op = {};
+   var boardRow = function (row) {
+      return A2($Html.tr,
+      _U.list([]),
+      A2($List.map,function (square) {    return A2($Html.td,_U.list([]),_U.list([$Html.text($Basics.toString(square.coordinate.x))]));},row));
+   };
+   var view = F2(function (address,board) {
+      return A2($Html.div,_U.list([]),_U.list([A2($Html.table,_U.list([]),_U.list([A2($Html.tbody,_U.list([]),A2($List.map,boardRow,board.squares))]))]));
+   });
+   var update = F2(function (action,model) {    return model;});
+   var Click = function (a) {    return {ctor: "Click",_0: a};};
+   var Board = function (a) {    return {squares: a};};
+   return _elm.Board.values = {_op: _op,Board: Board,Click: Click,update: update,view: view,boardRow: boardRow};
+};
