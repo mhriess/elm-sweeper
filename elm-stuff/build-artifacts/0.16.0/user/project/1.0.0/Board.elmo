@@ -15,59 +15,94 @@ Elm.Board.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Square = Elm.Square.make(_elm);
    var _op = {};
-   var update = F2(function (action,model) {
-      var _p0 = action;
-      var _p2 = _p0._0;
-      var _p1 = _p0._1;
-      var updateSquare = function (square) {
-         return _U.eq(_p2.row,square.row) && _U.eq(_p2.col,square.col) ? A2($Square.update,_p1,square) : A2($Square.isNeighbor,
-         square,
-         _p2) && $Basics.not(square.isMined) ? A2($Square.update,_p1,square) : square;
-      };
-      return A2($List.map,updateSquare,model);
+   var Modify = F4(function (a,b,c,d) {    return {ctor: "Modify",_0: a,_1: b,_2: c,_3: d};});
+   var viewSquare = F4(function (address,row,col,model) {    return A2($Square.view,A2($Signal.forwardTo,address,A3(Modify,row,col,model)),model);});
+   var viewRow = F3(function (address,rowIndex,row) {
+      return A2($Html.tr,_U.list([]),$Array.toList(A2($Array.indexedMap,A2(viewSquare,address,rowIndex),row)));
    });
-   var Reveal = F2(function (a,b) {    return {ctor: "Reveal",_0: a,_1: b};});
-   var toMultiDimensional$ = F2(function (square,acc) {
-      var row = A2($Maybe.withDefault,$Array.empty,A2($Array.get,square.row,acc));
-      var col = A3($Array.set,square.col,square,row);
-      var updated = A3($Array.set,square.row,col,acc);
-      return updated;
-   });
-   var toMultiDimensional = function (board) {
-      var boardLength = $Basics.round($Basics.sqrt($Basics.toFloat($List.length(board))));
-      var initial = A2($Array.initialize,
-      boardLength,
-      function (n) {
-         return A2($Array.initialize,boardLength,function (m) {    return A4($Square.init,0,0,false,false);});
-      });
-      return A3($Array.foldl,toMultiDimensional$,initial,$Array.fromList(board));
-   };
-   var isVictory = function (board) {
-      return $Basics.not(A2($List.any,function (square) {    return $Basics.not(square.isMined) && $Basics.not(square.isRevealed);},board));
-   };
-   var isLoss = function (board) {    return A2($List.any,$Square.isMineRevealed,board);};
-   var getNeighbors = F2(function (square,board) {    return A2($List.filter,$Square.isNeighbor(square),board);});
-   var viewSquare = F3(function (address,board,model) {
-      var neighbors = A2(getNeighbors,model,board);
-      var mineCount = $List.length(A2($List.filter,function (_) {    return _.isMined;},neighbors));
-      return A3($Square.view,A2($Signal.forwardTo,address,Reveal(model)),model,mineCount);
-   });
-   var viewRow = F3(function (address,board,row) {    return A2($Html.tr,_U.list([]),$Array.toList(A2($Array.map,A2(viewSquare,address,board),row)));});
    var view = F2(function (address,model) {
-      var multiDimensional = toMultiDimensional(model);
       return A2($Html.table,
       _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "width",_1: "100%"}
                                               ,{ctor: "_Tuple2",_0: "height",_1: "500px"}
                                               ,{ctor: "_Tuple2",_0: "table-layout",_1: "fixed"}]))]),
-      _U.list([A2($Html.tbody,_U.list([]),$Array.toList(A2($Array.map,A2(viewRow,address,model),multiDimensional)))]));
+      _U.list([A2($Html.tbody,_U.list([]),$Array.toList(A2($Array.indexedMap,viewRow(address),model)))]));
    });
+   var find = F3(function (rowI,colI,model) {    var row = A2($Maybe.withDefault,$Array.empty,A2($Array.get,rowI,model));return A2($Array.get,colI,row);});
+   var any$ = F3(function (cond,model,res) {
+      any$: while (true) if (_U.eq(res,true) || $Array.isEmpty(model)) return res; else {
+            var tail = A3($Array.slice,1,$Array.length(model),model);
+            var head = A3($Array.slice,0,1,model);
+            var headFirst = A2($Maybe.withDefault,$Array.empty,A2($Array.get,0,head));
+            var _v0 = cond,_v1 = tail,_v2 = $Basics.not($Array.isEmpty(A2($Array.filter,cond,headFirst)));
+            cond = _v0;
+            model = _v1;
+            res = _v2;
+            continue any$;
+         }
+   });
+   var any = F2(function (cond,model) {    return A3(any$,cond,model,false);});
+   var getNeighbors = F3(function (row,col,model) {
+      var flatten = F2(function (maybeNeighbor,neighbors) {
+         var _p0 = maybeNeighbor;
+         if (_p0.ctor === "Just") {
+               return A2($List._op["::"],_p0._0,neighbors);
+            } else {
+               return neighbors;
+            }
+      });
+      var bottomColIndex = col + 1;
+      var middleColIndex = col;
+      var upperColIndex = col - 1;
+      var bottomRowIndex = row + 1;
+      var bottomRow = A2($Maybe.withDefault,$Array.empty,A2($Array.get,bottomRowIndex,model));
+      var bl = A2($Array.get,upperColIndex,bottomRow);
+      var bm = A2($Array.get,col,bottomRow);
+      var br = A2($Array.get,bottomColIndex,bottomRow);
+      var middleRowIndex = row;
+      var middleRow = A2($Maybe.withDefault,$Array.empty,A2($Array.get,middleRowIndex,model));
+      var ml = A2($Array.get,upperColIndex,middleRow);
+      var mr = A2($Array.get,bottomColIndex,middleRow);
+      var upperRowIndex = row - 1;
+      var upperRow = A2($Maybe.withDefault,$Array.empty,A2($Array.get,upperRowIndex,model));
+      var ul = A2($Array.get,upperColIndex,upperRow);
+      var um = A2($Array.get,middleColIndex,upperRow);
+      var ur = A2($Array.get,bottomColIndex,upperRow);
+      return A3($List.foldl,
+      flatten,
+      _U.list([]),
+      A2($List._op["::"],
+      ul,
+      A2($List._op["::"],
+      um,
+      A2($List._op["::"],ur,A2($List._op["::"],ml,A2($List._op["::"],mr,A2($List._op["::"],bl,A2($List._op["::"],bm,A2($List._op["::"],br,_U.list([]))))))))));
+   });
+   var isNeighbor = F4(function (row1,col1,row2,col2) {    return _U.cmp($Basics.abs(row1 - row2),1) < 1 && _U.cmp($Basics.abs(col1 - col2),1) < 1;});
+   var update = F2(function (action,model) {
+      var _p1 = action;
+      var _p5 = _p1._2;
+      var _p4 = _p1._0;
+      var _p3 = _p1._1;
+      var _p2 = _p1._3;
+      var updateSquare = F3(function (rowY,colY,square) {
+         return _U.eq(_p4,rowY) && _U.eq(_p3,colY) ? A2($Square.update,_p2,_p5) : A4(isNeighbor,
+         _p4,
+         _p3,
+         rowY,
+         colY) && ($Basics.not(square.isMined) && $Basics.not(_p5.isMined)) ? A2($Square.update,_p2,square) : square;
+      });
+      return A2($Array.indexedMap,F2(function (rowIndex,row) {    return A2($Array.indexedMap,updateSquare(rowIndex),row);}),model);
+   });
+   var init = function (size) {
+      return A2($Array.initialize,size,function (n) {    return A2($Array.initialize,size,function (m) {    return A3($Square.init,false,false,0);});});
+   };
    return _elm.Board.values = {_op: _op
+                              ,init: init
+                              ,isNeighbor: isNeighbor
                               ,getNeighbors: getNeighbors
-                              ,isLoss: isLoss
-                              ,isVictory: isVictory
-                              ,toMultiDimensional: toMultiDimensional
-                              ,toMultiDimensional$: toMultiDimensional$
-                              ,Reveal: Reveal
+                              ,any: any
+                              ,any$: any$
+                              ,find: find
+                              ,Modify: Modify
                               ,update: update
                               ,view: view
                               ,viewRow: viewRow

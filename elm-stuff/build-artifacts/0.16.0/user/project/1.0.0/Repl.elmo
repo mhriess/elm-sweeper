@@ -31,16 +31,18 @@ Elm.Repl.make = function (_elm) {
    };
    var initializeSquare = F2(function (row,col) {    return {row: row,col: col,isMined: false,isRevealed: false};});
    var p = A2($List.map,initializeSquare,_U.range(0,9));
+   var deltron3030 = A2($List._op["::"],1,A2($List._op["::"],2,_U.list([])));
    var board = 64;
-   var b = _U.list([{isMined: false,isRevealed: false},{isMined: true,isRevealed: false}]);
-   var deltron3030 = b;
-   var a = 2;
+   var a = $Array.empty;
+   var b = A2($Array.push,A2($Array.initialize,3,$Basics.identity),a);
+   var c = A2($Array.push,A2($Array.initialize,3,$Basics.identity),b);
    var Square = F4(function (a,b,c,d) {    return {row: a,col: b,isMined: c,isRevealed: d};});
    return _elm.Repl.values = {_op: _op
                              ,Square: Square
                              ,a: a
                              ,b: b
                              ,board: board
+                             ,c: c
                              ,deltron3030: deltron3030
                              ,initializeSquare: initializeSquare
                              ,isVictory: isVictory

@@ -4,6 +4,7 @@ Elm.Game.make = function (_elm) {
    _elm.Game = _elm.Game || {};
    if (_elm.Game.values) return _elm.Game.values;
    var _U = Elm.Native.Utils.make(_elm),
+   $Array = Elm.Array.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Board = Elm.Board.make(_elm),
    $Debug = Elm.Debug.make(_elm),
@@ -38,15 +39,21 @@ Elm.Game.make = function (_elm) {
             }
       }()]));
    });
-   var placeMine = F3(function (row,col,square) {    return _U.eq(square.row,row) && _U.eq(square.col,col) ? _U.update(square,{isMined: true}) : square;});
+   var setMineCounts = function (board) {
+      var getCount = F2(function (rowIndex,colIndex) {
+         return $List.length(A2($List.filter,function (_) {    return _.isMined;},A3($Board.getNeighbors,rowIndex,colIndex,board)));
+      });
+      var setCount = F3(function (rowIndex,colIndex,square) {    return _U.update(square,{adjacentMineCount: A2(getCount,rowIndex,colIndex)});});
+      return A2($Array.indexedMap,F2(function (rowIndex,row) {    return A2($Array.indexedMap,setCount(rowIndex),row);}),board);
+   };
    var randomPair = F3(function (seed,min,max) {    return A2($Random.generate,A2($Random.pair,A2($Random.$int,min,max),A2($Random.$int,min,max)),seed);});
    var placeMines = F3(function (board,numMines,seed) {
       placeMines: while (true) if (_U.eq(numMines,0)) return board; else {
-            var rnd = A3(randomPair,seed,0,$List.length(board));
+            var rnd = A3(randomPair,seed,0,$Array.length(board));
             var coords = $Basics.fst(rnd);
             var row = $Basics.fst(coords);
             var col = $Basics.snd(coords);
-            var maybeSquare = $List.head(A2($List.filter,function (sq) {    return _U.eq(sq.row,row) && _U.eq(sq.col,col);},board));
+            var maybeSquare = A3($Board.find,row,col,board);
             var newSeed = $Basics.snd(rnd);
             var _p1 = maybeSquare;
             if (_p1.ctor === "Just") {
@@ -57,7 +64,9 @@ Elm.Game.make = function (_elm) {
                         seed = _v4;
                         continue placeMines;
                      } else {
-                        var newBoard = A2($List.map,A2(placeMine,row,col),board);
+                        var boardRow = A2($Maybe.withDefault,$Array.empty,A2($Array.get,row,board));
+                        var updatedRow = A3($Array.set,col,A3($Square.init,true,false,0),boardRow);
+                        var newBoard = A3($Array.set,row,updatedRow,board);
                         var _v5 = newBoard,_v6 = numMines - 1,_v7 = newSeed;
                         board = _v5;
                         numMines = _v6;
@@ -73,17 +82,18 @@ Elm.Game.make = function (_elm) {
                }
          }
    });
+   var isVictory = function (board) {
+      return $Basics.not(A2($Board.any,function (square) {    return $Basics.not(square.isMined) && $Basics.not(square.isRevealed);},board));
+   };
+   var isLoss = function (board) {    return A2($Board.any,$Square.isMineRevealed,board);};
    var board = function (model) {    var _p2 = model;if (_p2.ctor === "FinishedGame") {    return _p2._0;} else {    return _p2._0;}};
    var UnfinishedGame = function (a) {    return {ctor: "UnfinishedGame",_0: a};};
    var initialState = function () {
       var seed = $Random.initialSeed(33212);
-      var blankBoard = A2($List.concatMap,
-      function (n) {
-         return A2($List.map,function (m) {    return A4($Square.init,n,m,false,false);},_U.range(0,9));
-      },
-      _U.range(0,9));
+      var blankBoard = $Board.init(8);
       var board = A3(placeMines,blankBoard,10,seed);
-      return UnfinishedGame(board);
+      var boardWithMineCounts = setMineCounts(board);
+      return UnfinishedGame(boardWithMineCounts);
    }();
    var FinishedGame = F2(function (a,b) {    return {ctor: "FinishedGame",_0: a,_1: b};});
    var Loss = {ctor: "Loss"};
@@ -92,9 +102,7 @@ Elm.Game.make = function (_elm) {
       var _p3 = action;
       switch (_p3.ctor)
       {case "Move": var newBoard = A2($Board.update,_p3._0,board(model));
-           return $Board.isLoss(newBoard) ? A2(FinishedGame,newBoard,Loss) : $Board.isVictory(newBoard) ? A2(FinishedGame,
-           newBoard,
-           Victory) : UnfinishedGame(newBoard);
+           return isLoss(newBoard) ? A2(FinishedGame,newBoard,Loss) : isVictory(newBoard) ? A2(FinishedGame,newBoard,Victory) : UnfinishedGame(newBoard);
          case "Reset": return initialState;
          default: return model;}
    });
@@ -104,9 +112,11 @@ Elm.Game.make = function (_elm) {
                              ,FinishedGame: FinishedGame
                              ,UnfinishedGame: UnfinishedGame
                              ,board: board
+                             ,isLoss: isLoss
+                             ,isVictory: isVictory
                              ,randomPair: randomPair
-                             ,placeMine: placeMine
                              ,placeMines: placeMines
+                             ,setMineCounts: setMineCounts
                              ,initialState: initialState
                              ,Move: Move
                              ,Reset: Reset

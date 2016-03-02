@@ -16,34 +16,25 @@ Elm.Square.make = function (_elm) {
    var _op = {};
    var update = F2(function (action,model) {    var _p0 = action;return _U.update(model,{isRevealed: true});});
    var Reveal = {ctor: "Reveal"};
-   var view = F3(function (address,square,mineCount) {
-      return square.isRevealed ? A2($Html.td,
+   var view = F2(function (address,model) {
+      return model.isRevealed ? A2($Html.td,
       _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "border",_1: "1px solid black"}
-                                              ,{ctor: "_Tuple2",_0: "background-color",_1: square.isMined ? "red" : "gray"}
+                                              ,{ctor: "_Tuple2",_0: "background-color",_1: model.isMined ? "red" : "gray"}
                                               ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                               ,{ctor: "_Tuple2",_0: "height",_1: "48px"}
                                               ,{ctor: "_Tuple2",_0: "width",_1: "48px"}
                                               ,{ctor: "_Tuple2",_0: "font-size",_1: "10px"}]))]),
-      _U.list([$Html.text(_U.cmp(mineCount,0) > 0 && $Basics.not(square.isMined) ? $Basics.toString(mineCount) : "")])) : A2($Html.td,
+      _U.list([$Html.text(_U.cmp(model.adjacentMineCount,
+      0) > 0 && $Basics.not(model.isMined) ? $Basics.toString(model.adjacentMineCount) : "")])) : A2($Html.td,
       _U.list([A2($Html$Events.onClick,address,Reveal)
               ,$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "border",_1: "1px solid black"}
-                                              ,{ctor: "_Tuple2",_0: "background-color",_1: "blue"}
+                                              ,{ctor: "_Tuple2",_0: "background-color",_1: model.isMined ? "red" : "blue"}
                                               ,{ctor: "_Tuple2",_0: "height",_1: "48px"}
                                               ,{ctor: "_Tuple2",_0: "width",_1: "48px"}]))]),
       _U.list([]));
    });
-   var isNeighbor = F2(function (square1,square2) {
-      return _U.cmp($Basics.abs(square1.row - square2.row),1) < 1 && _U.cmp($Basics.abs(square1.col - square2.col),1) < 1;
-   });
    var isMineRevealed = function (square) {    return square.isMined && square.isRevealed;};
-   var init = F4(function (row,col,isMined,isRevealed) {    return {row: row,col: col,isMined: isMined,isRevealed: isRevealed};});
-   var Model = F4(function (a,b,c,d) {    return {row: a,col: b,isMined: c,isRevealed: d};});
-   return _elm.Square.values = {_op: _op
-                               ,Model: Model
-                               ,init: init
-                               ,isMineRevealed: isMineRevealed
-                               ,isNeighbor: isNeighbor
-                               ,Reveal: Reveal
-                               ,update: update
-                               ,view: view};
+   var init = F3(function (isMined,isRevealed,adjacentMineCount) {    return {isMined: isMined,isRevealed: isRevealed,adjacentMineCount: adjacentMineCount};});
+   var Model = F3(function (a,b,c) {    return {isMined: a,isRevealed: b,adjacentMineCount: c};});
+   return _elm.Square.values = {_op: _op,Model: Model,init: init,isMineRevealed: isMineRevealed,Reveal: Reveal,update: update,view: view};
 };
